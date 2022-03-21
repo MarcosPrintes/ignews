@@ -2,11 +2,19 @@ import styles from "./styles.module.scss";
 
 interface SubscribeButtonProps {
   priceId: string;
+  onSubscribeButton: () => void;
 }
 
-export default function SubscribeButton({priceId}: SubscribeButtonProps) {
+export default function SubscribeButton({
+  priceId,
+  onSubscribeButton,
+}: SubscribeButtonProps) {
   return (
-    <button className={styles.subscribeButton} type="button">
+    <button
+      onClick={() => onSubscribeButton()}
+      className={styles.subscribeButton}
+      type="button"
+    >
       Subscribe now
     </button>
   );
