@@ -7,6 +7,7 @@ import styles from "./home.module.scss";
 import { stripe } from "../services/stripe";
 import api from "../services/api";
 import { getStripejs } from "../services/stripe-js";
+import { useRouter } from "next/router";
 
 interface HomeProps {
   product: {
@@ -18,10 +19,16 @@ interface HomeProps {
 export default function Home({ product }: HomeProps) {
   const { priceId, amount } = product;
   const { data: session, status } = useSession();
+  const { push } = useRouter();
 
   async function handleSubscribe() {
     if (!session) {
       signIn("github");
+      return;
+    }
+
+    if (session.activeSubscription) {
+      push("/posts");
       return;
     }
 

@@ -179,3 +179,6 @@ Pagos
 - Saleor (ecommerce)
 
 ## Criando a página de posts
+
+O CMS escolhido foi o Prismic.
+

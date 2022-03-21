@@ -1,11 +1,21 @@
 import { GetStaticProps } from "next";
 import Head from "next/head";
-import { getPrismicClient } from "../../services/prismic";
-import Prismic from "@prismicio/client";
+import Link from "next/link";
+
+import { RichText } from "prismic-dom";
+
+import { createClient } from "../../../prismicio";
+// import { getPrismicClient } from "../../services/prismic";
 
 import styles from "./styles.module.scss";
 
-export default function Posts() {
+type PostsProps = {
+  posts: Post[];
+};
+
+type Post = { slug: string; title: string; excerpt: string; updatedAt: string };
+
+export default function Posts({ posts }: PostsProps) {
   return (
     <>
       <Head>
@@ -14,36 +24,15 @@ export default function Posts() {
 
       <main className={styles.container}>
         <div className={styles.posts}>
-          <a href="#d">
-            <time> 12 de março de 2022 </time>
-            <strong> Creating a monorepo with Lerna & yarn workspace </strong>
-            <p>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolore,
-              praesentium! Voluptatem minus deleniti expedita nemo veniam, magni
-              quos necessitatibus esse quasi ipsa fugiat explicabo ullam et
-              rerum, similique eos labore!
-            </p>
-          </a>
-          <a href="#d">
-            <time> 12 de março de 2022 </time>
-            <strong> Creating a monorepo with Lerna & yarn workspace </strong>
-            <p>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolore,
-              praesentium! Voluptatem minus deleniti expedita nemo veniam, magni
-              quos necessitatibus esse quasi ipsa fugiat explicabo ullam et
-              rerum, similique eos labore!
-            </p>
-          </a>
-          <a href="#d">
-            <time> 12 de março de 2022 </time>
-            <strong> Creating a monorepo with Lerna & yarn workspace </strong>
-            <p>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolore,
-              praesentium! Voluptatem minus deleniti expedita nemo veniam, magni
-              quos necessitatibus esse quasi ipsa fugiat explicabo ullam et
-              rerum, similique eos labore!
-            </p>
-          </a>
+          {posts.map(({ excerpt, slug, title, updatedAt }) => (
+            <Link href={`/posts/${slug}`} key={slug}>
+              <a>
+                <time> {updatedAt} </time>
+                <strong> {title} </strong>
+                <p>{excerpt}</p>
+              </a>
+            </Link>
+          ))}
         </div>
       </main>
     </>
@@ -51,14 +40,34 @@ export default function Posts() {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const prismic = getPrismicClient();
+  const prismic = createClient();
 
-  // const response = await prismic
-  //   .get
-  //   // Prismic.predicate.at("document.type", "publication")
-  //   ();
+  const response = await prismic.getAllByType("post", {
+    fetch: ["post.title", "post.text", "post.content"],
+    pageSize: 10,
+  });
+
+  const posts = response.map((post) => {
+    return {
+      slug: post.uid,
+      title: RichText.asText(post.data.title),
+      excerpt:
+        post.data.content.find((content) => content.type === "paragraph")
+          ?.text ?? "",
+      updatedAt: new Date(post.last_publication_date).toLocaleDateString(
+        "pt-BR",
+        {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        }
+      ),
+    };
+  });
 
   return {
-    props: {},
+    props: {
+      posts,
+    },
   };
 };
